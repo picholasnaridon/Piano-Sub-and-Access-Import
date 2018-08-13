@@ -1,0 +1,114 @@
+<div class="container">
+  <div class="jumbotron">
+    <img src="/img/bi.png" alt="">
+  </div>
+  <div class="sectionOne">
+    <div class="row">
+      <div class="col-xs-12">
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <span class="glyphicon glyphicon-cloud-upload"></span>
+            <div class="progress">
+              <div class="progress-bar" role="progressbar"></div>
+            </div>
+            <button class="btn btn-lg upload-btn" type="button">Upload File</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <input id="upload-input" type="file" name="uploads[]" multiple="multiple">
+    </br>
+  </div>
+  <div class="sectionTwo">
+    <button class="btn-primary btn-lg" id="createUsers">Create Users</button>
+    <h1>Select Resource</h1>
+    <label for="exampleSelect2">Select a Term(s)</label>
+    <select class="form-control form-control-lg" id="termSelect">
+      {{#each resources }}
+      <option value="{{this.rid}}" {{#selected}}selected="selected" {{/selected}}>
+        {{this.name}}
+      </option>
+      {{/each}}
+    </select>
+    <br>
+    <br>
+    <label for="duration">Length of Access (days)</label>
+    <input type="number" name="duration" id="duration">
+    <br>
+    <button class="btn-primary" id="applyAccess">Apply to selected Users</button>
+  </div>
+</div>
+
+
+<script>
+  var uploadedFile;
+  $('.sectionTwo').hide()
+  $('.upload-btn').on('click', function () {
+    $('#upload-input').click();
+    $('.progress-bar').text('0%');
+    $('.progress-bar').width('0%');
+  });
+
+  $('#upload-input').on('change', function () {
+    var files = $(this).get(0).files;
+
+    if (files.length > 0) {
+      // create a FormData object which will be sent as the data payload in the
+      // AJAX request
+      var formData = new FormData();
+
+      // loop through all the selected files and add them to the formData object
+      for (var i = 0; i < files.length; i++) {
+        var file = files[i];
+
+        // add the files to formData object for the data payload
+        formData.append('uploads[]', file, file.name);
+      }
+
+      $.ajax({
+        url: '/upload',
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function (data) {
+          uploadedFile = data
+          $('.sectionOne').hide()
+          $('.sectionTwo').show()
+        },
+      });
+    }
+  });
+
+  $('#createUsers').click(function (e) {
+    e.preventDefault()
+    var data = { uploadedFile: uploadedFile }
+    console.log(uploadedFile)
+    $.ajax({
+      url: '/createUsers',
+      method: 'post',
+      data: data,
+      success: function (res) {
+        console.log(res)
+      }
+    })
+  })
+
+  $('#applyAccess').click(function (e) {
+    e.preventDefault()
+    var rid = $('#termSelect option:selected').val()
+    var duration = $('#duration').val()
+    var data = { uploadedFile: uploadedFile, rid: rid, duration: duration }
+    console.log(uploadedFile)
+    console.log(data)
+    $.ajax({
+      url: '/grantAccess',
+      method: 'post',
+      data: data,
+      success: function (res) {
+        console.log(res)
+      }
+    })
+  })
+
+</script>
